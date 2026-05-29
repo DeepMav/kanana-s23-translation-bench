@@ -122,20 +122,31 @@ python scripts/plot_thermal_timeline.py results/thermal_*.csv results/sustained_
 
 ## 결과
 
-⏳ **측정 진행 예정** — 결과 CSV·플롯은 [`results/`](results/) 디렉터리에 추가됩니다.
+⏳ **S23 측정 대기 중** — 결과 CSV·플롯은 [`results/`](results/) 디렉터리에 추가됩니다.
 
-플레이스홀더 (PC bf16과 비교):
+### PC 베이스라인 (i9-10900, llama.cpp CPU, 4 threads, Q4_K_M)
 
-| 항목 | PC bf16 (RTX 3090) | S23 Q4_K_M (예상) | 측정값 |
-|---|---:|---:|---:|
-| Decode tok/s | ~50+ | 5–15 | TBD |
-| Prefill tok/s | ~200+ | 50–100 | TBD |
-| BLEU (200쌍) | 32.04 | 28–31 (Q4 손실 1–4) | TBD |
-| chrF++ | 57.26 | 54–57 | TBD |
-| Throttle 시작 | n/a | 3–8 분 | TBD |
-| 30분 평균 tok/s | n/a | 4–10 | TBD |
-| Peak CPU 온도 | n/a | 80–90°C | TBD |
-| Peak 배터리 온도 | n/a | 40–45°C | TBD |
+llama-bench 측정값 (smoke test 동시 확인):
+
+| 항목 | 값 |
+|---|---:|
+| Prefill (pp64) | **92.56 ± 0.41 tok/s** |
+| Decode (tg32) | **20.35 ± 0.16 tok/s** |
+| 실제 추론 (--single-turn) | Prefill 91.1 / Decode 23.3 tok/s |
+| 모델 메모리 | 1.29 GiB (Q4 5.31 BPW) |
+
+### S23 (Snapdragon 8 Gen 2) 예상치 vs 측정 비교 표
+
+| 항목 | PC bf16 (3090) | PC Q4 (i9-10900) | S23 Q4 (예상) | S23 측정값 |
+|---|---:|---:|---:|---:|
+| Decode tok/s | ~50+ | 20.4 | 6–10 | TBD |
+| Prefill tok/s | ~200+ | 92.6 | 30–60 | TBD |
+| BLEU (200쌍) | 32.04 | TBD | 28–31 | TBD |
+| chrF++ | 57.26 | TBD | 54–57 | TBD |
+| Throttle 시작 | n/a | n/a | 3–8 분 | TBD |
+| 30분 평균 tok/s | n/a | n/a | 4–8 | TBD |
+| Peak CPU 온도 | n/a | n/a | 80–90°C | TBD |
+| Peak 배터리 온도 | n/a | n/a | 40–45°C | TBD |
 
 ---
 

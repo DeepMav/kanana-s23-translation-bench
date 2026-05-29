@@ -21,7 +21,7 @@ def run_llama(llama_cli, gguf, prompt, threads, nctx, npredict):
     proc = subprocess.run(
         [llama_cli, "-m", gguf, "-t", str(threads), "-c", str(nctx),
          "-n", str(npredict), "--temp", "0",
-         "-p", prompt, "--no-display-prompt", "-no-cnv"],
+         "-p", prompt, "--no-display-prompt", "--single-turn"],
         capture_output=True, text=True, check=False,
     )
     return proc.stdout.strip()

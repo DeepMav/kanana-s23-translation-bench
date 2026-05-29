@@ -44,7 +44,7 @@ while true; do
   "$LLAMA_CLI" \
     -m "$GGUF" \
     -t "$THREADS" -c "$NCTX" -n "$NPREDICT" --temp 0 \
-    -p "$PROMPT" --no-display-prompt -no-cnv \
+    -p "$PROMPT" --no-display-prompt --single-turn \
     > /dev/null 2> "$TMP_ERR"
 
   PREFILL=$(grep "prompt eval time" "$TMP_ERR" | grep -oE "[0-9.]+ tokens per second" | grep -oE "^[0-9.]+" | head -1)

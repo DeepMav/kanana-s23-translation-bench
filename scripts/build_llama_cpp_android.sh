@@ -19,9 +19,10 @@ CMAKE_ARGS=(
   -B build
   -DCMAKE_BUILD_TYPE=Release
   -DLLAMA_CURL=OFF
-  -DGGML_NATIVE=ON                  # -march=native (X3 자동 감지)
-  -DCMAKE_C_FLAGS="-O3 -march=armv8.4-a+dotprod+fp16"
-  -DCMAKE_CXX_FLAGS="-O3 -march=armv8.4-a+dotprod+fp16"
+  # 새 llama.cpp는 GGML_NATIVE=ON으로 CPU 플래그 자동 감지 안 함 → 명시 필요
+  -DGGML_CPU_ARM_ARCH=armv8.4-a+dotprod+fp16   # Cortex-X3 / A715 적합
+  -DCMAKE_C_FLAGS="-O3"
+  -DCMAKE_CXX_FLAGS="-O3"
 )
 
 if [[ "$USE_VULKAN" == "1" ]]; then

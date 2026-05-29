@@ -46,7 +46,7 @@ trap "rm -f $TMP_ERR $TMP_OUT" EXIT
   --temp 0 \
   -p "$PROMPT" \
   --no-display-prompt \
-  -no-cnv \
+  --single-turn \
   > "$TMP_OUT" 2> "$TMP_ERR"
 
 echo "──── 번역 결과 ────"
