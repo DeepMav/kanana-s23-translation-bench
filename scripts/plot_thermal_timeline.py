@@ -47,12 +47,18 @@ def main():
     t0 = ts[0]
     minutes = [(t - t0) / 60 for t in ts]
 
-    batt_decic = to_floats(cols.get("batt_temp_decic", []), scale=0.1)
+    # 새 포맷: batt_temp_c (Celsius float). 구버전 호환: batt_temp_decic (deci-C → C).
+    if "batt_temp_c" in cols:
+        batt_c = to_floats(cols["batt_temp_c"])
+        batt_col = "batt_temp_c"
+    else:
+        batt_c = to_floats(cols.get("batt_temp_decic", []), scale=0.1)
+        batt_col = "batt_temp_decic"
 
-    # CPU zones — 흥미로운 것만 (cpuss, gpu, aoss)
+    # CPU zones — 흥미로운 것만 (cpuss, gpu, aoss, skin)
     interesting = []
     for h in header:
-        if h in ("timestamp", "batt_temp_decic", "cpu7_freq_khz"):
+        if h in ("timestamp", batt_col, "cpu7_freq_khz"):
             continue
         if any(k in h.lower() for k in ("cpuss", "gpu", "aoss", "skin", "battery")):
             interesting.append(h)
@@ -72,16 +78,16 @@ def main():
 
     # 1) 배터리 온도
     ax = axes[axi]; axi += 1
-    ax.plot(minutes, batt_decic, label="Battery", color="tab:red", lw=2)
+    ax.plot(minutes, batt_c, label="Battery", color="tab:red", lw=2)
     ax.set_ylabel("Battery °C")
     ax.grid(alpha=0.3)
     ax.legend(loc="lower right")
     ax.set_title(f"S23 thermal + throughput timeline — start {datetime.fromtimestamp(t0):%Y-%m-%d %H:%M}")
 
-    # 2) CPU zones
+    # 2) CPU zones — thermal_logger가 이미 Celsius로 변환해 기록
     ax = axes[axi]; axi += 1
     for h in interesting:
-        vals = to_floats(cols[h], scale=0.001)  # milli-C → C
+        vals = to_floats(cols[h])
         ax.plot(minutes, vals, label=h, lw=1.2, alpha=0.85)
     ax.set_ylabel("CPU °C")
     ax.grid(alpha=0.3)

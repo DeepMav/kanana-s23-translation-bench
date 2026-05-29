@@ -63,14 +63,26 @@ bash prepare/convert_to_gguf.sh
 
 ### 2. S23에 모델 + llama.cpp 배포
 
+**Termux 첫 셋업** (반드시 F-Droid 빌드, Play Store 버전 X):
+
 ```bash
-# Termux 안에서 llama.cpp 빌드
-bash scripts/build_llama_cpp_android.sh
+# F-Droid에서 Termux + Termux:API 두 앱 설치 후 Termux에서:
+pkg update && pkg upgrade -y
+pkg install -y git cmake clang make python python-pip termux-api
+termux-setup-storage          # 권한 팝업 → 허용
 
 # GGUF 모델 푸시 (PC → 폰)
+# (PC에서)
 adb push out/kanana-1.5-2.1b-koen-q4_k_m.gguf /sdcard/Download/
-# Termux에서 /storage/emulated/0/Download/ 로 접근
+
+# Termux에서 레포 클론 + llama.cpp 빌드
+git clone https://github.com/DeepMav/kanana-s23-translation-bench
+cd kanana-s23-translation-bench
+bash scripts/build_llama_cpp_android.sh
 ```
+
+> **`Termux:API` 앱이 별도로 필요** — `termux-battery-status`로 배터리 온도 측정. Termux 본체와 별도 패키지(F-Droid에 있음).
+> **Wakelock 권장** — 30분 측정 시 폰 절전으로 죽지 않도록 Termux 알림 메뉴에서 "Acquire wakelock" ON.
 
 ### 3. 벤치마크 실행 (S23 Termux)
 
