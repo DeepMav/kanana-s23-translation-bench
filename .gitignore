@@ -1,0 +1,27 @@
+# Models / artifacts (too large for git)
+*.gguf
+*.safetensors
+*.bin
+merged/
+out/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# Measurement results — only commit curated snapshots, not raw runs
+results/raw/
+results/*.tmp.csv
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Termux logs
+*.log
+nohup.out
