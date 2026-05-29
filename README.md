@@ -134,7 +134,9 @@ python scripts/plot_thermal_timeline.py results/thermal_*.csv results/sustained_
 
 ## 결과
 
-⏳ **S23 측정 대기 중** — 결과 CSV·플롯은 [`results/`](results/) 디렉터리에 추가됩니다.
+**Run 1 결과 (2026-05-29)** — [`results/s23_run1/RESULTS.md`](results/s23_run1/RESULTS.md) · [timeline.png](results/s23_run1/timeline.png)
+
+**한 줄 요약**: S23 Termux에서 decode **2.25 tok/s**로 30분 동안 일정 (변동 ±15%). **Throttle curve 없음** — `cpu7_freq` 864 MHz로 30분 내내 락. CPU 온도 51°C로 thermal 한계와 거리 멀음 → **Android background policy가 클럭을 제한한 결과**이지 열물리 한계가 아님.
 
 ### PC 베이스라인 (i9-10900, llama.cpp CPU, 4 threads, Q4_K_M)
 
@@ -149,16 +151,19 @@ llama-bench 측정값 (smoke test 동시 확인):
 
 ### S23 (Snapdragon 8 Gen 2) 예상치 vs 측정 비교 표
 
-| 항목 | PC bf16 (3090) | PC Q4 (i9-10900) | S23 Q4 (예상) | S23 측정값 |
+| 항목 | PC bf16 (3090) | PC Q4 (i9-10900) | S23 Q4 (예상) | **S23 측정값 (Termux Run 1)** |
 |---|---:|---:|---:|---:|
-| Decode tok/s | ~50+ | 20.4 | 6–10 | TBD |
-| Prefill tok/s | ~200+ | 92.6 | 30–60 | TBD |
-| BLEU (200쌍) | 32.04 | TBD | 28–31 | TBD |
+| Decode tok/s | ~50+ | 20.4 | 6–10 | **2.25** (median 2.20, range 1.7–2.8) |
+| Prefill tok/s | ~200+ | 92.6 | 30–60 | **6.98** (median 7.00) |
+| BLEU (200쌍) | 32.04 | TBD | 28–31 | TBD (val 데이터 필요) |
 | chrF++ | 57.26 | TBD | 54–57 | TBD |
-| Throttle 시작 | n/a | n/a | 3–8 분 | TBD |
-| 30분 평균 tok/s | n/a | n/a | 4–8 | TBD |
-| Peak CPU 온도 | n/a | n/a | 80–90°C | TBD |
-| Peak 배터리 온도 | n/a | n/a | 40–45°C | TBD |
+| Throttle 시작 | n/a | n/a | 3–8 분 | **관찰되지 않음** (30분 내내 일정) |
+| 30분 평균 tok/s | n/a | n/a | 4–8 | **2.25** |
+| Peak CPU 온도 (cpuss-0) | n/a | n/a | 80–90°C | **51.3°C** |
+| Peak 배터리 온도 | n/a | n/a | 40–45°C | **37.7°C** |
+| cpu7 주파수 | n/a | n/a | throttle curve | **864 MHz 고정 (정격 26%)** |
+
+**예상치보다 훨씬 낮은 throughput + 발열이 한계점에 못 미침 + 클럭이 처음부터 끝까지 동일** → 열물리적 throttling이 아니라 **Android background policy의 클럭 제한** 결론. Foreground APK·`taskset` BIG core pinning 등 후속 측정 필요.
 
 ---
 
