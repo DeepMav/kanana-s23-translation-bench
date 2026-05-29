@@ -34,10 +34,13 @@ $TEXT
 "
 
 # llama-cli 실행 — stderr에 timing 정보가 들어옴
-TMP_ERR=$(mktemp)
 TMP_OUT=$(mktemp)
-trap "rm -f $TMP_ERR $TMP_OUT" EXIT
+trap "rm -f $TMP_OUT" EXIT
 
+# 새 llama.cpp(2026~): 모든 출력이 stdout에, 요약 라인은
+#   [ Prompt: X t/s | Generation: Y t/s ]
+# 형식. stderr는 비어있음.
+START=$(date +%s.%N)
 "$LLAMA_CLI" \
   -m "$GGUF" \
   -t "$THREADS" \
@@ -47,20 +50,19 @@ trap "rm -f $TMP_ERR $TMP_OUT" EXIT
   -p "$PROMPT" \
   --no-display-prompt \
   --single-turn \
-  > "$TMP_OUT" 2> "$TMP_ERR"
+  > "$TMP_OUT" 2>&1
+END=$(date +%s.%N)
+TOTAL_S=$(awk "BEGIN { printf \"%.3f\", $END - $START }")
 
 echo "──── 번역 결과 ────"
-cat "$TMP_OUT"
+# Response 이후만 추출 (배너·로딩 스피너 제외)
+awk '/^ ### Response:$/{flag=1; next} /\[ Prompt:/{flag=0} flag' "$TMP_OUT" | sed '/^$/d'
 echo ""
 echo "──── 성능 ────"
-# llama.cpp는 stderr 끝에 timing 출력
-grep -E "(prompt eval time|eval time|total time)" "$TMP_ERR" || tail -20 "$TMP_ERR"
+grep -E "\[ Prompt:" "$TMP_OUT" || echo "(no perf summary — old llama.cpp?)"
 
-# CSV 한 줄 (timestamp,direction,prefill_tps,decode_tps,total_s)
-PREFILL_TPS=$(grep "prompt eval time" "$TMP_ERR" | grep -oE "[0-9.]+ tokens per second" | grep -oE "^[0-9.]+" | head -1)
-DECODE_TPS=$(grep "^[[:space:]]*eval time" "$TMP_ERR" | grep -oE "[0-9.]+ tokens per second" | grep -oE "^[0-9.]+" | head -1)
-TOTAL_S=$(grep "total time" "$TMP_ERR" | grep -oE "[0-9.]+ ms" | head -1 | grep -oE "^[0-9.]+")
-TOTAL_S=$(awk "BEGIN { printf \"%.3f\", ${TOTAL_S:-0}/1000 }")
+PREFILL_TPS=$(grep -oE "Prompt: [0-9.]+ t/s" "$TMP_OUT" | grep -oE "[0-9.]+" | head -1)
+DECODE_TPS=$(grep -oE "Generation: [0-9.]+ t/s" "$TMP_OUT" | grep -oE "[0-9.]+" | head -1)
 
 echo ""
 echo "CSV: $(date +%s),$DIRECTION,${PREFILL_TPS:-NA},${DECODE_TPS:-NA},${TOTAL_S}"

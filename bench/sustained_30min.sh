@@ -4,7 +4,11 @@
 #
 # 사용법:
 #   bash bench/sustained_30min.sh <GGUF_PATH> results/sustained_run1.csv
-set -euo pipefail
+# 환경변수:
+#   DURATION_S=1800 NPREDICT=200 THREADS=4 NCTX=1024
+#
+# 새 llama.cpp는 timing summary가 stdout: [ Prompt: X t/s | Generation: Y t/s ]
+set -uo pipefail   # -e 제외: grep 실패해도 NA로 기록 후 계속
 
 GGUF="${1:?GGUF 경로}"
 OUT="${2:?출력 CSV 경로}"
@@ -40,20 +44,22 @@ while true; do
   fi
 
   RUN=$((RUN + 1))
-  TMP_ERR=$(mktemp)
+  TMP_OUT=$(mktemp)
+  RUN_START=$(date +%s.%N)
   "$LLAMA_CLI" \
     -m "$GGUF" \
     -t "$THREADS" -c "$NCTX" -n "$NPREDICT" --temp 0 \
     -p "$PROMPT" --no-display-prompt --single-turn \
-    > /dev/null 2> "$TMP_ERR"
+    > "$TMP_OUT" 2>&1
+  RUN_END=$(date +%s.%N)
+  TOTAL_S=$(awk "BEGIN { printf \"%.3f\", $RUN_END - $RUN_START }")
 
-  PREFILL=$(grep "prompt eval time" "$TMP_ERR" | grep -oE "[0-9.]+ tokens per second" | grep -oE "^[0-9.]+" | head -1)
-  DECODE=$(grep "^[[:space:]]*eval time" "$TMP_ERR" | grep -oE "[0-9.]+ tokens per second" | grep -oE "^[0-9.]+" | head -1)
-  TOTAL_MS=$(grep "total time" "$TMP_ERR" | grep -oE "[0-9.]+ ms" | head -1 | grep -oE "^[0-9.]+")
-  TOTAL_S=$(awk "BEGIN { printf \"%.3f\", ${TOTAL_MS:-0}/1000 }")
+  # 새 포맷: [ Prompt: 8.6 t/s | Generation: 3.4 t/s ]
+  PREFILL=$(grep -oE "Prompt: [0-9.]+ t/s" "$TMP_OUT" | grep -oE "[0-9.]+" | head -1)
+  DECODE=$(grep -oE "Generation: [0-9.]+ t/s" "$TMP_OUT" | grep -oE "[0-9.]+" | head -1)
 
   echo "$NOW,$RUN,${PREFILL:-NA},${DECODE:-NA},$TOTAL_S" >> "$OUT"
-  rm -f "$TMP_ERR"
+  rm -f "$TMP_OUT"
 
   # 표시
   printf "[%3dmin %2ds] run=%-3d decode=%s tok/s\n" $((ELAPSED/60)) $((ELAPSED%60)) "$RUN" "${DECODE:-NA}"
